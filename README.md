@@ -121,40 +121,93 @@ Dan pastikan wallet kamu sudah memiliki tBNB dari faucet.
 
 ### Bagian 2 — Live Code Smart Contract (Menit 30-90)
 
-#### Step 1: Setup Project Foundry
+#### Step 1: Setup Project Foundry (Sampai Build Berhasil)
 
 ```bash
 forge init vault-dapp
 cd vault-dapp
 ```
 
-> **Stuck?** Kalau `forge init` gagal, clone repo ini dan checkout branch yang sesuai:
->
-> ```bash
-> git clone <repo-url>
-> git checkout 1-setup
-> ```
-
-Edit `foundry.toml`, tambahkan RPC BNB Testnet:
-
-```toml
-[rpc_endpoints]
-bsc_testnet = "https://data-seed-prebsc-1-s1.bnbchain.org:8545"
-```
-
-#### Step 2: Install OpenZeppelin Contracts
+**Install OpenZeppelin Contracts:**
 
 ```bash
-forge install OpenZeppelin/openzeppelin-contracts --no-commit
+forge install OpenZeppelin/openzeppelin-contracts
 ```
 
-Buat file `remappings.txt`:
+**Generate remappings otomatis:**
+
+```bash
+forge remappings > remappings.txt
+```
+
+> Ini akan otomatis mendeteksi library di `lib/` dan membuat mapping yang benar. Tidak perlu tulis manual.
+
+**Edit `foundry.toml`** — tambahkan solc version, RPC, dan Etherscan config:
+
+```toml
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+solc_version = "0.8.20"
+
+[rpc_endpoints]
+bsc_testnet = "${BSC_TESTNET_RPC_URL}"
+
+[etherscan]
+bsc_testnet = { key = "${BSCSCAN_API_KEY}", url = "https://api-testnet.bscscan.com/api" }
+```
+
+**Setup Environment Variables:**
+
+Copy file `.env.example` menjadi `.env`:
+
+```bash
+cp .env.example .env
+```
+
+Isi `.env` dengan credential kamu:
+
+```env
+# Private key wallet testing (JANGAN pakai wallet utama!)
+PRIVATE_KEY=your_private_key_here
+
+# RPC URL BNB Testnet
+BSC_TESTNET_RPC_URL=https://data-seed-prebsc-1-s1.bnbchain.org:8545
+
+# BscScan API Key (untuk verifikasi contract di explorer)
+# Daftar gratis di: https://bscscan.com/myapikey
+BSCSCAN_API_KEY=your_bscscan_api_key_here
+```
+
+> **Penting:** File `.env` sudah ada di `.gitignore` secara default. Jangan pernah commit file ini.
+
+**Verifikasi build berhasil:**
+
+```bash
+forge build
+```
+
+Output yang diharapkan:
 
 ```
-@openzeppelin/=lib/openzeppelin-contracts/
+Compiler run successful!
 ```
 
-#### Step 3: Buat Token Contract
+> **Stuck?** Kalau ada error di step manapun, checkout branch checkpoint lalu lanjutkan setup:
+>
+> ```bash
+> git clone https://github.com/yeheskieltame/campus-ws.git
+> cd campus-ws
+> git checkout 1-setup
+> forge install OpenZeppelin/openzeppelin-contracts
+> forge remappings > remappings.txt
+> cp .env.example .env
+> # Edit .env dengan credential kamu
+> forge build
+> ```
+
+#### Step 2: Buat Token Contract
 
 Buat file `src/CampusToken.sol`:
 
@@ -171,7 +224,7 @@ contract CampusToken is ERC20 {
 }
 ```
 
-#### Step 4: Buat Vault Contract
+#### Step 3: Buat Vault Contract
 
 Buat file `src/Vault.sol` — konsep "Koperasi Mahasiswa" dimana user bisa setor dan tarik token:
 
@@ -211,7 +264,7 @@ contract Vault {
 }
 ```
 
-#### Step 5: Build & Test
+#### Step 4: Build & Test
 
 ```bash
 forge build
@@ -263,7 +316,7 @@ Jalankan test:
 forge test -vvv
 ```
 
-#### Step 6: Deploy ke BNB Testnet
+#### Step 5: Deploy ke BNB Testnet
 
 Buat file `script/Deploy.s.sol`:
 
@@ -287,18 +340,19 @@ contract DeployScript is Script {
 }
 ```
 
-Deploy:
+Deploy (pastikan `.env` sudah terisi dari Step 1):
 
 ```bash
-forge script script/Deploy.s.sol --rpc-url bsc_testnet --broadcast --private-key <PRIVATE_KEY_KAMU>
+source .env
+forge script script/Deploy.s.sol --rpc-url $BSC_TESTNET_RPC_URL --broadcast --private-key $PRIVATE_KEY
 ```
 
-> **PERINGATAN:** Jangan pernah commit private key ke Git. Gunakan `.env` + `--private-key` dari environment variable untuk keamanan.
+> **PERINGATAN:** Jangan pernah commit private key ke Git. File `.env` sudah ada di `.gitignore` secara default.
 >
 > **Stuck?** Checkout branch checkpoint:
 >
 > ```bash
-> git checkout 3-deploy
+> git checkout 4-deploy
 > ```
 
 Setelah deploy berhasil, catat **Contract Address** dari output. Kamu akan butuh ini untuk frontend.
@@ -307,7 +361,7 @@ Cek contract kamu di: `https://testnet.bscscan.com/address/<CONTRACT_ADDRESS>`
 
 ### Bagian 3 — Live Code Frontend (Menit 90-120)
 
-#### Step 7: Setup Frontend Next.js
+#### Step 6: Setup Frontend Next.js
 
 ```bash
 npx create-next-app@latest frontend
@@ -323,7 +377,7 @@ npm install ethers
 > npm install
 > ```
 
-#### Step 8: Konfigurasi ABI & Contract Address
+#### Step 7: Konfigurasi ABI & Contract Address
 
 Setelah `forge build`, ABI ada di `vault-dapp/out/Vault.sol/Vault.json`.
 
@@ -342,7 +396,7 @@ export const TOKEN_ABI = [
 ] as const;
 ```
 
-#### Step 9: Integrasi Tombol Deposit & Withdraw
+#### Step 8: Integrasi Tombol Deposit & Withdraw
 
 Buat komponen utama yang menghubungkan UI ke Smart Contract menggunakan `ethers.js`:
 
@@ -397,12 +451,13 @@ async function withdraw(amount: string) {
 
 Jangan panik kalau tertinggal! Gunakan branch checkpoint untuk langsung menyusul:
 
-| Branch        | Deskripsi                                  |
-| ------------- | ------------------------------------------ |
-| `1-setup`     | Project Foundry sudah ter-init + config    |
-| `2-contracts` | Smart Contract Token & Vault sudah lengkap |
-| `3-deploy`    | Contract sudah siap deploy + script        |
-| `4-frontend`  | Frontend starter sudah terhubung           |
+| Branch               | Deskripsi                                     |
+| -------------------- | --------------------------------------------- |
+| `1-setup`            | Project Foundry sudah ter-init + config       |
+| `2-addContractToken` | Smart Contract Token (ERC20) sudah lengkap    |
+| `3-addContractVault` | Smart Contract Vault sudah lengkap            |
+| `4-deploy`           | Deploy script siap + contract ter-deploy      |
+| `5-frontend`         | Frontend starter sudah terhubung              |
 
 ```bash
 git checkout <nama-branch>
