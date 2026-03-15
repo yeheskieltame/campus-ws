@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
-import "../src/CampusToken.sol";
+import {Test} from "forge-std/Test.sol";
+import {CampusToken} from "../src/CampusToken.sol";
 
 contract CampusTokenTest is Test {
     CampusToken token;
@@ -23,8 +23,23 @@ contract CampusTokenTest is Test {
         assertEq(token.balanceOf(deployer), 1_000_000 * 10 ** 18);
     }
 
+    function testOwner() public view {
+        assertEq(token.owner(), deployer);
+    }
+
+    function testOwnerCanMint() public {
+        token.mint(alice, 500 * 10 ** 18);
+        assertEq(token.balanceOf(alice), 500 * 10 ** 18);
+    }
+
+    function testNonOwnerCannotMint() public {
+        vm.prank(alice);
+        vm.expectRevert();
+        token.mint(alice, 500 * 10 ** 18);
+    }
+
     function testTransfer() public {
-        token.transfer(alice, 100 * 10 ** 18);
+        assertTrue(token.transfer(alice, 100 * 10 ** 18));
         assertEq(token.balanceOf(alice), 100 * 10 ** 18);
     }
 
@@ -33,7 +48,7 @@ contract CampusTokenTest is Test {
         assertEq(token.allowance(deployer, alice), 50 * 10 ** 18);
 
         vm.prank(alice);
-        token.transferFrom(deployer, alice, 50 * 10 ** 18);
+        assertTrue(token.transferFrom(deployer, alice, 50 * 10 ** 18));
         assertEq(token.balanceOf(alice), 50 * 10 ** 18);
     }
 }
