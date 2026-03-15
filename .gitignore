@@ -1,0 +1,57 @@
+# ========================
+# Environment & Secrets
+# ========================
+.env
+.env.local
+.env.*.local
+
+# ========================
+# OS Files
+# ========================
+.DS_Store
+Thumbs.db
+
+# ========================
+# IDE / Editor
+# ========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ========================
+# Foundry (Smart Contract)
+# ========================
+vault-dapp/cache/
+vault-dapp/out/
+vault-dapp/broadcast/*/31337/
+vault-dapp/broadcast/**/dry-run/
+vault-dapp/docs/
+
+# ========================
+# Node.js / Frontend
+# ========================
+node_modules/
+.next/
+out/
+dist/
+.turbo/
+
+# ========================
+# Build & Debug
+# ========================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ========================
+# TypeScript
+# ========================
+*.tsbuildinfo
+
+# ========================
+# Misc
+# ========================
+coverage/
+.nyc_output/
