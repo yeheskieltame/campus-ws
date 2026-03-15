@@ -22,6 +22,7 @@ Thumbs.db
 # ========================
 # Foundry (Smart Contract)
 # ========================
+vault-dapp/lib/
 vault-dapp/cache/
 vault-dapp/out/
 vault-dapp/broadcast/*/31337/
